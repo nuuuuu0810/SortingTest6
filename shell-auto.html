@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>シェルソート 選択</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* --- スタイル 1: Flexboxレイアウト (元の挿入ソートからそのまま) --- */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        #main {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .left-pane {
+            width: 55%;
+            padding: 30px;
+            box-sizing: border-box;
+            border-right: 1px solid #ccc;
+            background-color: #f8f9fa;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .left-pane h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .left-pane p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .right-pane {
+            width: 45%;
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: #eef1f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            /* controls-container と sort-module-wrapper の間 */
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        /* --- コントロールコンテナ (新規追加) --- */
+        .controls-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+            /* sort-module-wrapper との少しの間隔 */
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 6px;
+            width: 100%;
+            max-width: 750px;
+            /* sort-module-wrapper の max-width に合わせる */
+            box-sizing: border-box;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .controls-container button {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s ease;
+        }
+
+        .controls-container button:hover {
+            background-color: #e9ecef;
+        }
+
+        .controls-container button:disabled {
+            background-color: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .controls-container label {
+            font-size: 0.9em;
+            margin-left: 5px;
+        }
+
+        .controls-container input[type="range"] {
+            cursor: pointer;
+            flex-grow: 1;
+            max-width: 150px;
+        }
+
+        #speedValue {
+            font-size: 0.9em;
+            min-width: 65px;
+            /* 少し広げる */
+            text-align: right;
+            color: #333;
+        }
+
+
+        .right-pane h4 {
+            font-size: 1em;
+            color: #333;
+            margin-right: auto;
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+
+        .sort-module-wrapper {
+            width: 100%;
+            max-width: 750px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: auto;
+            padding-left: 30px;
+            height: 85vh;
+        }
+
+        #sync_bar_graph_container {
+            display: flex;
+            width: 100%;
+            min-height: 200px;
+            padding: 10px 0;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        #bar_items_wrapper {
+            display: flex;
+            gap: 5px;
+            align-items: flex-end;
+            position: relative;
+        }
+
+        .bar_item {
+            width: 40px;
+            text-align: center;
+            border: 1px solid #d0d0d0;
+            background-color: #f0f0f0;
+            font-weight: bold;
+            font-size: 1em;
+            color: #FFFFFF;
+            box-sizing: border-box;
+            position: relative;
+            --value: 1;
+            height: calc(25px + (var(--value) * 15px));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background-color 0.3s ease, border-color 0.3s ease, height 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #shell_main-app-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 0;
+        }
+
+        #gap-display-container {
+            width: 100%;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+            padding: 5px 0 10px 0;
+            box-sizing: border-box;
+        }
+
+        #gap-display-container span {
+            background-color: #f0f2f5;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+
+        #shell_sort-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .step-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+            justify-content: flex-start;
+            min-height: 45px;
+            opacity: 1;
+            visibility: visible;
+            height: auto;
+            transition: opacity 0.5s ease-in-out, visibility 0s linear 0s, height 0.5s ease-in-out, margin-bottom 0.5s ease-in-out;
+            position: relative;
+            box-sizing: border-box;
+            padding: 0;
+            width: 100%;
+        }
+
+        .step-row:not(.visible) {
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+            visibility: hidden;
+            pointer-events: none;
+            margin-bottom: 0;
+            transition: opacity 0.3s ease-out, height 0.3s ease-out, margin-bottom 0.3s ease-out, visibility 0s linear 0.3s;
+        }
+
+        .step-row.visible {
+            opacity: 1;
+            height: auto;
+            margin-bottom: 4px;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+
+        .initial-array-row.visible {
+            margin-bottom: 8px;
+        }
+
+        .number-squares {
+            display: flex;
+            gap: 6px;
+            margin-right: 10px;
+            flex-wrap: nowrap;
+        }
+
+        .number-element {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            color: black;
+            font-weight: bold;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            cursor: default;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            text-align: center;
+            text-align-last: center;
+            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .number-element option {
+            background-color: white;
+            color: black;
+        }
+
+        .number-element.state-color-red,
+        .bar_item.state-color-red {
+            background-color: #FFC0CB;
+            border-color: #FFB6C1;
+            color: black !important;
+        }
+
+        .number-element.state-color-yellow,
+        .bar_item.state-color-yellow {
+            background-color: #FFEB3B;
+            border-color: #FBC02D;
+            color: black !important;
+        }
+
+        .number-element.state-color-base-lightblue,
+        .bar_item.state-color-base-lightblue {
+            background-color: #8CE3FE;
+            border-color: #7bc8e2;
+            color: black !important;
+        }
+
+        .number-element.state-color-light-orange,
+        .bar_item.state-color-light-orange {
+            background-color: #FFDAB9;
+            border-color: #FFC8A1;
+            color: black !important;
+        }
+
+        .number-element.state-color-light-green,
+        .bar_item.state-color-light-green {
+            background-color: #90EE90;
+            border-color: #7ACC7A;
+            color: black !important;
+        }
+
+        .number-element.state-initial,
+        .bar_item.state-initial {
+            background-color: #FFC107;
+            border-color: #FFA000;
+            color: black !important;
+        }
+
+        .number-element.state-final-sorted,
+        .bar_item.state-final-sorted {
+            background-color: #FFC107;
+            border-color: #FFA000;
+            color: black !important;
+        }
+
+        .number-element.state-unsorted,
+        .bar_item.state-unsorted {
+            background-color: #cccccc;
+            border-color: #b3b3b3;
+            color: black !important;
+        }
+
+        .number-element.state-sorted,
+        .bar_item.state-sorted {
+            background-color: #8CE3FE;
+            border-color: #7bc8e2;
+            color: black !important;
+        }
+
+        .number-element.state-key-active,
+        .bar_item.state-key-active {
+            background-color: #FF6347 !important;
+            border-color: #E5533D !important;
+            box-shadow: 0 0 8px rgba(255, 99, 71, 0.7);
+            transform: scale(1.05);
+            z-index: 10;
+            color: white !important;
+        }
+
+        .number-element.state-compare-active,
+        .bar_item.state-compare-active {
+            background-color: #FFA500 !important;
+            border-color: #E09000 !important;
+            box-shadow: 0 0 8px rgba(255, 165, 0, 0.7);
+            color: black !important;
+        }
+
+        .number-element.state-shifting,
+        .bar_item.state-shifting {
+            background-color: #9ACD32 !important;
+            border-color: #89BB2B !important;
+            opacity: 0.9;
+            color: black !important;
+        }
+
+
+        .number-element:disabled {
+            opacity: 1;
+            cursor: default;
+        }
+
+        .number-element:disabled::-ms-expand {
+            display: none;
+        }
+
+        .execute-btn {
+            background-color: #212121;
+            color: white;
+            border: 1px solid #000;
+            width: 38px;
+            height: 38px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            transition: background-color 0.2s ease;
+            padding: 0;
+            flex-shrink: 0;
+            cursor: pointer;
+            margin-right: 12px;
+        }
+
+        .execute-btn svg {
+            fill: white;
+            width: 16px;
+            height: 16px;
+            display: block;
+        }
+
+        .execute-btn:disabled {
+            background-color: #666666;
+            border-color: #555555;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .execute-btn:disabled svg {
+            fill: #cccccc;
+        }
+
+        .status-text {
+            font-size: 1.0em;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: left;
+            line-height: 40px;
+            flex-shrink: 0;
+        }
+
+        .status-ok {
+            color: #2ecc40;
+        }
+
+        .status-error {
+            color: #ff4136;
+        }
+
+        .status-complete {
+            color: #2ecc40;
+        }
+
+        .empty-array-message {
+            padding: 10px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #555;
+            width: 100%;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .sort-module-wrapper {
+                padding-left: 20px;
+            }
+
+            .controls-container {
+                flex-wrap: wrap;
+            }
+
+            .controls-container input[type="range"] {
+                min-width: 120px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .number-squares {
+                gap: 4px;
+                margin-right: 8px;
+            }
+
+            .number-element {
+                width: 32px;
+                height: 32px;
+                font-size: 1em;
+            }
+
+            .execute-btn {
+                width: 32px;
+                height: 32px;
+                margin-right: 8px;
+            }
+
+            .execute-btn svg {
+                width: 14px;
+                height: 14px;
+            }
+
+            .status-text {
+                font-size: 1em;
+                min-width: 50px;
+                line-height: 32px;
+            }
+
+            .bar_item {
+                width: 30px;
+                font-size: 0.8em;
+                height: calc(15px + (var(--value) * 10px));
+            }
+
+            #gap-display-container {
+                font-size: 1em;
+            }
+
+            .sort-module-wrapper {
+                padding-left: 10px;
+            }
+
+            .controls-container button {
+                padding: 6px 10px;
+                font-size: 0.85em;
+            }
+
+            .controls-container label,
+            #speedValue {
+                font-size: 0.85em;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main">
+        <div class="left-pane">
+            <img src="shell.png" alt="shell" width="100%">
+        </div>
+        <div class="right-pane">
+            <div class="controls-container">
+                <button id="playPauseButton">実行</button>
+                <button id="resetButton">リセット</button>
+                <label for="speedRange">速度:</label>
+                <input type="range" id="speedRange" min="1" max="20" value="10" step="1">
+                <span id="speedValue">x1.0 倍</span>
+            </div>
+            <div class="sort-module-wrapper">
+                <h4>現在のギャップ: <span id="shell_current-gap-value">-</span> (<span
+                        id="shell_current-subgroup-info"></span>)</h4>
+                <div id="sync_bar_graph_container">
+                    <div id="bar_items_wrapper">
+                        <!-- JavaScriptで棒グラフ要素を動的に生成 -->
+                    </div>
+                </div>
+                <div id="shell_main-app-container">
+                    <div id="gap-display-container">
+                        <!-- ギャップシーケンス表示用 (オプション) -->
+                    </div>
+                    <div id="shell_sort-container">
+                        <!-- JavaScript will populate this area -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Global Shared State ---
+        let sharedInitialArray = [];
+
+        // --- Script: Shell Sort ---
+        let shell_initialArray = [];
+        let shell_currentArray = [];
+        let shell_allPossibleOptionsForSelect = [];
+
+        const shell_sortContainer = document.getElementById('shell_sort-container');
+        const shell_currentGapValueDisplay = document.getElementById('shell_current-gap-value');
+        const shell_currentSubgroupInfoDisplay = document.getElementById('shell_current-subgroup-info');
+        const gapDisplayContainer = document.getElementById('gap-display-container');
+
+
+        let shell_allRowsElements = [];
+        let shell_allNumberElementsInRows = [];
+        let shell_allExecuteButtons = [];
+        let shell_allStatusTexts = [];
+
+        let shell_state = {
+            gaps: [],
+            currentGapIndex: 0,
+            currentRowIndexInUI: 0,
+            isPerformingInnerSort: false,
+            innerSortState: null
+        };
+
+        const SHELL_SUBGROUP_COLORS = [
+            "state-color-red", "state-color-light-orange", "state-color-yellow",
+            "state-color-light-green", "state-color-base-lightblue"
+        ];
+
+        const barGraphItemsWrapper = document.getElementById('bar_items_wrapper');
+
+        function renderBarGraph(arr, elementStates = []) {
+            if (!barGraphItemsWrapper) return;
+            if (barGraphItemsWrapper.children.length !== arr.length && arr.length > 0) {
+                barGraphItemsWrapper.innerHTML = '';
+                arr.forEach((_, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'bar_item';
+                    item.id = `bar_item-${index}`;
+                    barGraphItemsWrapper.appendChild(item);
+                });
+            } else if (arr.length === 0) {
+                barGraphItemsWrapper.innerHTML = '';
+            }
+
+            arr.forEach((value, index) => {
+                const item = document.getElementById(`bar_item-${index}`);
+                if (!item) return;
+                item.textContent = value;
+                item.style.setProperty('--value', value);
+
+                const classesToRemove = Array.from(item.classList).filter(cls => cls.startsWith('state-') || cls.includes('-active') || cls.includes('-shifting'));
+                if (classesToRemove.length > 0) item.classList.remove(...classesToRemove);
+
+                if (elementStates && elementStates[index]) {
+                    if (Array.isArray(elementStates[index])) {
+                        item.classList.add(...elementStates[index].filter(Boolean));
+                    } else {
+                        item.classList.add(elementStates[index]);
+                    }
+                } else if (arr.length > 0) {
+                    item.classList.add('state-unsorted');
+                }
+            });
+        }
+
+        function shell_createSelectElement(id, value, optionsArray, stateClasses, isDisabled) {
+            const select = document.createElement('select');
+            select.id = id;
+            if (Array.isArray(stateClasses)) {
+                select.className = `number-element ${stateClasses.join(' ')}`;
+            } else {
+                select.className = `number-element ${stateClasses}`;
+            }
+            select.disabled = isDisabled;
+            const stringValueToSelect = String(value);
+
+            const uniqueStringOptions = [...new Set(optionsArray.map(String))];
+            const sortedOptions = uniqueStringOptions.sort((a, b) => Number(a) - Number(b));
+
+            if (value !== undefined && value !== null && value !== '' && !sortedOptions.includes(stringValueToSelect)) {
+                sortedOptions.push(stringValueToSelect);
+                sortedOptions.sort((a, b) => Number(a) - Number(b));
+            }
+
+            sortedOptions.forEach(optVal => {
+                const option = document.createElement('option');
+                option.value = String(optVal);
+                option.textContent = String(optVal);
+                select.appendChild(option);
+            });
+
+            select.value = stringValueToSelect;
+            if (select.value !== stringValueToSelect && select.options.length > 0) {
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].textContent === stringValueToSelect) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+            if (select.options.length === 0 && (value !== undefined && value !== null && value !== '')) {
+                const option = document.createElement('option');
+                option.value = stringValueToSelect;
+                option.textContent = stringValueToSelect;
+                select.appendChild(option);
+                select.value = stringValueToSelect;
+            }
+            return select;
+        }
+
+        function shell_getGaps(N) {
+            if (N <= 1) return [];
+            const gaps = [];
+            let gap = Math.floor(N / 2);
+            while (gap > 0) {
+                gaps.push(gap);
+                gap = Math.floor(gap / 2);
+            }
+            return gaps.length > 0 ? gaps : (N > 1 ? [1] : []);
+        }
+
+        function shell_generateRows() {
+            shell_sortContainer.innerHTML = '';
+            shell_allRowsElements = [];
+            shell_allNumberElementsInRows = [];
+            shell_allExecuteButtons = [];
+            shell_allStatusTexts = [];
+            const numElements = shell_currentArray.length;
+
+            shell_allPossibleOptionsForSelect = [];
+            if (numElements > 0) {
+                const maxValInArray = shell_currentArray.length > 0 ? Math.max(...shell_currentArray.map(Number)) : 0;
+                const maxOptionVal = Math.max(20, maxValInArray);
+                for (let k = 1; k <= maxOptionVal; k++) {
+                    shell_allPossibleOptionsForSelect.push(String(k));
+                }
+            }
+
+            if (numElements > 0) {
+                const initialDisplayRowDiv = document.createElement('div');
+                initialDisplayRowDiv.className = 'step-row visible initial-array-row';
+                const initialSquaresDiv = document.createElement('div');
+                initialSquaresDiv.className = 'number-squares';
+                shell_initialArray.forEach((val, index) => {
+                    const selectEl = shell_createSelectElement(`initial-el-${index}`, val, [val], 'state-initial', true);
+                    initialSquaresDiv.appendChild(selectEl);
+                });
+                initialDisplayRowDiv.appendChild(initialSquaresDiv);
+                shell_sortContainer.appendChild(initialDisplayRowDiv);
+            } else {
+                const emptyMsgDiv = document.createElement('div');
+                emptyMsgDiv.className = 'empty-array-message visible';
+                emptyMsgDiv.textContent = "ソート対象のデータがありません。";
+                shell_sortContainer.appendChild(emptyMsgDiv);
+                renderBarGraph([], []);
+                shell_currentGapValueDisplay.textContent = "-";
+                if (shell_currentSubgroupInfoDisplay) shell_currentSubgroupInfoDisplay.textContent = "";
+                if (gapDisplayContainer) gapDisplayContainer.innerHTML = "ギャップシーケンス: -";
+                return;
+            }
+            renderBarGraph(shell_currentArray, shell_currentArray.map(() => 'state-initial'));
+            if (shell_currentSubgroupInfoDisplay) shell_currentSubgroupInfoDisplay.textContent = "初期状態";
+
+
+            if (gapDisplayContainer) {
+                gapDisplayContainer.innerHTML = `ギャップシーケンス: <span>${shell_state.gaps.join(' → ') || '-'}</span>`;
+            }
+
+            const numGaps = shell_state.gaps.length;
+            for (let i = 0; i < numGaps; i++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'step-row';
+                rowDiv.id = `shell-step-row-${i}`;
+                const squaresDiv = document.createElement('div');
+                squaresDiv.className = 'number-squares';
+                const currentNumberElementsForRow = [];
+
+                for (let j = 0; j < numElements; j++) {
+                    const selectEl = shell_createSelectElement(`shell-el-${i}-${j}`, '', shell_allPossibleOptionsForSelect, 'state-unsorted', true);
+                    squaresDiv.appendChild(selectEl);
+                    currentNumberElementsForRow.push(selectEl);
+                }
+                shell_allNumberElementsInRows.push(currentNumberElementsForRow);
+                rowDiv.appendChild(squaresDiv);
+
+                const button = document.createElement('button');
+                button.className = 'execute-btn';
+                button.dataset.rowIndexUI = i;
+                button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/><path d="M0 0h24v24H0z" fill="none"/></svg>';
+                button.disabled = true;
+                button.addEventListener('click', function (event) {
+                    shell_handleExecute(event, false);
+                });
+                shell_allExecuteButtons[i] = button;
+                rowDiv.appendChild(button);
+
+                const statusSpan = document.createElement('span');
+                statusSpan.className = 'status-text';
+                statusSpan.id = `shell-status-${i}`;
+                shell_allStatusTexts[i] = statusSpan;
+                rowDiv.appendChild(statusSpan);
+
+                shell_sortContainer.appendChild(rowDiv);
+                shell_allRowsElements.push(rowDiv);
+            }
+
+            if (numGaps > 0 || numElements <= 1) {
+                const finalRowIndexUI = numGaps;
+                const finalStatusRow = document.createElement('div');
+                finalStatusRow.className = 'step-row';
+                finalStatusRow.id = `shell-step-row-${finalRowIndexUI}`;
+
+                const finalStatusSpan = document.createElement('span');
+                finalStatusSpan.className = 'status-text';
+                finalStatusSpan.id = `shell-status-${finalRowIndexUI}`;
+                finalStatusRow.appendChild(finalStatusSpan);
+
+                shell_allStatusTexts[finalRowIndexUI] = finalStatusSpan;
+                shell_allRowsElements.push(finalStatusRow);
+                shell_allNumberElementsInRows.push([]);
+                shell_allExecuteButtons.push(null);
+
+                shell_sortContainer.appendChild(finalStatusRow);
+            }
+        }
+
+        function shell_prepareStepUI(rowIndexUI, arrayToDisplay) {
+            if (rowIndexUI >= shell_allRowsElements.length || shell_state.currentGapIndex >= shell_state.gaps.length) {
+                return;
+            }
+
+            const currentGap = shell_state.gaps[shell_state.currentGapIndex];
+            shell_currentGapValueDisplay.textContent = currentGap;
+            if (shell_currentSubgroupInfoDisplay) {
+                // Reset subgroup info when preparing a new gap row, autoStep will update it if inner sort starts
+                shell_currentSubgroupInfoDisplay.textContent = `サブグループ - / ${currentGap}`;
+            }
+
+
+            const currentRowElement = shell_allRowsElements[rowIndexUI];
+            if (!currentRowElement) return;
+            currentRowElement.classList.add('visible');
+
+            const currentSelectsInRow = shell_allNumberElementsInRows[rowIndexUI];
+            if (!currentSelectsInRow || currentSelectsInRow.length === 0) {
+                if (shell_allExecuteButtons[rowIndexUI]) shell_allExecuteButtons[rowIndexUI].style.display = 'none';
+                return;
+            }
+
+            const barElementStates = [];
+
+            currentSelectsInRow.forEach((selectEl, colIndex) => {
+                let value = arrayToDisplay[colIndex];
+                let sublistId = colIndex % currentGap;
+                let cellStateClass = SHELL_SUBGROUP_COLORS[sublistId % SHELL_SUBGROUP_COLORS.length];
+                barElementStates[colIndex] = cellStateClass;
+
+                const newSelectEl = shell_createSelectElement(
+                    selectEl.id, value, shell_allPossibleOptionsForSelect, cellStateClass, false
+                );
+                selectEl.parentNode.replaceChild(newSelectEl, selectEl);
+                currentSelectsInRow[colIndex] = newSelectEl;
+            });
+            renderBarGraph(arrayToDisplay, barElementStates);
+
+            if (shell_allExecuteButtons[rowIndexUI]) {
+                shell_allExecuteButtons[rowIndexUI].disabled = false;
+                shell_allExecuteButtons[rowIndexUI].style.display = 'flex';
+            }
+            if (shell_allStatusTexts[rowIndexUI]) {
+                shell_allStatusTexts[rowIndexUI].textContent = '';
+                shell_allStatusTexts[rowIndexUI].className = 'status-text';
+            }
+        }
+
+        function shell_displayAllSorted(sortedArray, lastUsedRowIndexUI) {
+            shell_currentGapValueDisplay.textContent = (sortedArray.length <= 1) ? "ソート不要" : "ソート完了！";
+            if (shell_currentSubgroupInfoDisplay) shell_currentSubgroupInfoDisplay.textContent = "";
+            renderBarGraph(sortedArray, sortedArray.map(() => 'state-final-sorted'));
+
+            for (let i = lastUsedRowIndexUI + 1; i < shell_state.gaps.length; i++) {
+                if (shell_allRowsElements[i]) {
+                    shell_allRowsElements[i].classList.remove('visible');
+                }
+            }
+
+            let finalDisplayRowIndexUI = shell_state.gaps.length;
+            if (shell_currentArray.length <= 1 || shell_state.gaps.length === 0) {
+                finalDisplayRowIndexUI = (shell_allRowsElements.length > 1 && shell_state.gaps.length === 0) ? 0 : shell_state.gaps.length;
+            }
+
+            const targetRowElementForStatus = shell_allRowsElements[finalDisplayRowIndexUI];
+            const targetStatusTextElement = shell_allStatusTexts[finalDisplayRowIndexUI];
+
+            if (targetStatusTextElement) {
+                if (targetRowElementForStatus) targetRowElementForStatus.classList.add('visible');
+                targetStatusTextElement.textContent = '完了';
+                targetStatusTextElement.className = 'status-text status-complete';
+
+                if (shell_allExecuteButtons[finalDisplayRowIndexUI]) {
+                    shell_allExecuteButtons[finalDisplayRowIndexUI].style.display = 'none';
+                }
+                const selectsInFinalStatusRow = shell_allNumberElementsInRows[finalDisplayRowIndexUI];
+                if (selectsInFinalStatusRow && selectsInFinalStatusRow.length > 0 && selectsInFinalStatusRow[0] && selectsInFinalStatusRow[0].parentNode) {
+                    selectsInFinalStatusRow[0].parentNode.style.display = 'none';
+                }
+
+            } else if (lastUsedRowIndexUI >= 0 && shell_allStatusTexts[lastUsedRowIndexUI]) {
+                shell_allStatusTexts[lastUsedRowIndexUI].textContent = '完了';
+                shell_allStatusTexts[lastUsedRowIndexUI].className = 'status-text status-complete';
+            }
+
+            if (isAutoPlaying) {
+                stopAutoPlay();
+            }
+            if (playPauseButton) {
+                playPauseButton.textContent = '実行';
+                playPauseButton.disabled = true;
+            }
+        }
+
+        function calculateExpectedStateForGap(currentArr, gap) {
+            let expectedArray = [...currentArr];
+            const numElements = expectedArray.length;
+            // Standard Shell sort: iterate through subgroups
+            for (let offset = 0; offset < gap; offset++) {
+                // Insertion sort for elements at offset, offset + gap, offset + 2*gap, ...
+                for (let i = offset + gap; i < numElements; i += gap) {
+                    let tempKey = expectedArray[i];
+                    let k = i;
+                    while (k >= gap && expectedArray[k - gap] > tempKey && (k - gap) % gap === offset) { // Ensure k-gap is in same subgroup
+                        expectedArray[k] = expectedArray[k - gap];
+                        k -= gap;
+                    }
+                    expectedArray[k] = tempKey;
+                }
+            }
+            return expectedArray;
+        }
+
+        function shell_handleExecute(event, isAutoClick = false) {
+            const button = event.currentTarget;
+            const uiRowIndexOfButton = parseInt(button.dataset.rowIndexUI);
+
+            if (uiRowIndexOfButton !== shell_state.currentRowIndexInUI ||
+                shell_state.currentGapIndex >= shell_state.gaps.length) {
+                return;
+            }
+
+            if (shell_state.isPerformingInnerSort && !isAutoClick) {
+                stopAutoPlay();
+                shell_state.isPerformingInnerSort = false;
+                shell_state.innerSortState = null;
+                if (shell_currentSubgroupInfoDisplay) shell_currentSubgroupInfoDisplay.textContent = "手動操作中";
+            }
+
+            const numElements = shell_currentArray.length;
+            const currentStatusText = shell_allStatusTexts[shell_state.currentRowIndexInUI];
+            const userSelectedRowState = [];
+            const selectsInCurrentRow = shell_allNumberElementsInRows[shell_state.currentRowIndexInUI];
+
+            selectsInCurrentRow.forEach(selectEl => {
+                userSelectedRowState.push(Number(selectEl.value));
+            });
+
+            const currentGap = shell_state.gaps[shell_state.currentGapIndex];
+            const baseArrayForComparison = (isAutoClick && shell_state.innerSortState) ? shell_state.innerSortState.originalArrayForGap : shell_currentArray;
+            const expectedArrayAfterGapSort = calculateExpectedStateForGap(baseArrayForComparison, currentGap);
+
+            let isUserSetupCorrect = true;
+            for (let i = 0; i < numElements; i++) {
+                if (userSelectedRowState[i] !== expectedArrayAfterGapSort[i]) {
+                    isUserSetupCorrect = false;
+                    break;
+                }
+            }
+
+            const barElementStatesAfterUserAction = [];
+
+            if (isUserSetupCorrect) {
+                currentStatusText.textContent = 'OK';
+                currentStatusText.className = 'status-text status-ok';
+                button.disabled = true;
+
+                shell_currentArray = [...userSelectedRowState];
+
+                shell_allNumberElementsInRows[shell_state.currentRowIndexInUI].forEach((sel, idx) => {
+                    const finalValueInCell = shell_currentArray[idx];
+                    let sublistId = idx % currentGap;
+                    let cellStateClass = SHELL_SUBGROUP_COLORS[sublistId % SHELL_SUBGROUP_COLORS.length];
+                    barElementStatesAfterUserAction[idx] = cellStateClass;
+
+                    const newSelectEl = shell_createSelectElement(
+                        sel.id, finalValueInCell, [finalValueInCell], cellStateClass, true
+                    );
+                    sel.parentNode.replaceChild(newSelectEl, sel);
+                    shell_allNumberElementsInRows[shell_state.currentRowIndexInUI][idx] = newSelectEl;
+                });
+                renderBarGraph(shell_currentArray, barElementStatesAfterUserAction);
+
+                shell_state.currentGapIndex++;
+                const previousUIRowIndex = shell_state.currentRowIndexInUI;
+                shell_state.currentRowIndexInUI++;
+
+                shell_state.isPerformingInnerSort = false;
+                shell_state.innerSortState = null;
+                if (shell_currentSubgroupInfoDisplay) shell_currentSubgroupInfoDisplay.textContent = "次のギャップ準備中...";
+
+
+                if (shell_state.currentGapIndex < shell_state.gaps.length) {
+                    if (shell_state.currentRowIndexInUI < shell_allRowsElements.length &&
+                        shell_allNumberElementsInRows[shell_state.currentRowIndexInUI] &&
+                        shell_allNumberElementsInRows[shell_state.currentRowIndexInUI].length > 0) {
+                        shell_prepareStepUI(shell_state.currentRowIndexInUI, shell_currentArray);
+                    } else {
+                        shell_displayAllSorted(shell_currentArray, previousUIRowIndex);
+                    }
+                } else {
+                    shell_displayAllSorted(shell_currentArray, previousUIRowIndex);
+                }
+            } else {
+                currentStatusText.textContent = 'エラー';
+                currentStatusText.className = 'status-text status-error';
+                selectsInCurrentRow.forEach((sel, idx) => {
+                    let sublistId = idx % currentGap;
+                    barElementStatesAfterUserAction[idx] = SHELL_SUBGROUP_COLORS[sublistId % SHELL_SUBGROUP_COLORS.length];
+                });
+                renderBarGraph(userSelectedRowState, barElementStatesAfterUserAction);
+
+                if (isAutoPlaying && isAutoClick) {
+                    stopAutoPlay();
+                }
+            }
+        }
+
+
+        function shell_initializeSortProcess() {
+            stopAutoPlay();
+
+            sharedInitialArray = [5, 4, 7, 8, 10, 9, 6, 1, 3, 2];
+            //sharedInitialArray = [8,1,6,3,5,2,7,4];
+
+            shell_initialArray = [...sharedInitialArray].map(Number);
+            shell_currentArray = [...shell_initialArray];
+
+            shell_state.gaps = shell_getGaps(shell_currentArray.length);
+            shell_state.currentGapIndex = 0;
+            shell_state.currentRowIndexInUI = 0;
+            shell_state.isPerformingInnerSort = false;
+            shell_state.innerSortState = null;
+
+            shell_generateRows();
+
+            if (playPauseButton) {
+                playPauseButton.textContent = '実行';
+                if (shell_currentArray.length <= 1 || shell_state.gaps.length === 0) {
+                    playPauseButton.disabled = true;
+                    shell_displayAllSorted(shell_currentArray, -1);
+                } else {
+                    playPauseButton.disabled = false;
+                    shell_prepareStepUI(shell_state.currentRowIndexInUI, shell_currentArray);
+                }
+            } else {
+                if (shell_currentArray.length <= 1 || shell_state.gaps.length === 0) {
+                    shell_displayAllSorted(shell_currentArray, -1);
+                }
+            }
+        }
+
+        let playPauseButton;
+        let resetButton;
+        let speedRange;
+        let speedValueDisplay;
+
+        let isAutoPlaying = false;
+        let autoPlayTimerId = null;
+        let actualDelayMs = 1000;
+        const BASE_SPEED_MS = 1000;
+
+        function toggleAutoPlay() {
+            if (isAutoPlaying) {
+                stopAutoPlay();
+            } else {
+                startAutoPlay();
+            }
+        }
+
+        function startAutoPlay() {
+            if (shell_state.currentGapIndex >= shell_state.gaps.length || shell_currentArray.length <= 1) {
+                if (playPauseButton) {
+                    playPauseButton.textContent = '実行';
+                    playPauseButton.disabled = true;
+                }
+                isAutoPlaying = false;
+                return;
+            }
+
+            isAutoPlaying = true;
+            if (playPauseButton) {
+                playPauseButton.textContent = '一時停止';
+                playPauseButton.disabled = false;
+            }
+            autoStep();
+        }
+
+        function stopAutoPlay() {
+            isAutoPlaying = false;
+            if (autoPlayTimerId) {
+                clearTimeout(autoPlayTimerId);
+                autoPlayTimerId = null;
+            }
+            if (playPauseButton) {
+                playPauseButton.textContent = '実行';
+                if (shell_state.currentGapIndex >= shell_state.gaps.length || shell_currentArray.length <= 1) {
+                    playPauseButton.disabled = true;
+                } else {
+                    playPauseButton.disabled = false;
+                }
+            }
+        }
+
+        function autoStep() {
+            if (!isAutoPlaying) return;
+
+            if (shell_state.currentGapIndex >= shell_state.gaps.length || shell_currentArray.length <= 1) {
+                stopAutoPlay();
+                return;
+            }
+
+            const uiRowIndex = shell_state.currentRowIndexInUI;
+            const currentExecuteButtonForRow = shell_allExecuteButtons[uiRowIndex];
+
+            if (uiRowIndex >= shell_allRowsElements.length) {
+                stopAutoPlay();
+                return;
+            }
+
+            if (!shell_state.isPerformingInnerSort) {
+                const currentGap = shell_state.gaps[shell_state.currentGapIndex];
+                shell_state.isPerformingInnerSort = true;
+                shell_state.innerSortState = {
+                    workingArray: [...shell_currentArray],
+                    originalArrayForGap: [...shell_currentArray],
+                    currentSubgroupOffset: 0,
+                    i_relative: 1,
+                    k_relative: 1,
+                    tempKey: null,
+                    phase: 'PRE_SUBGROUP_LOOP',
+                    gap: currentGap,
+                    highlights: []
+                };
+                if (currentExecuteButtonForRow) currentExecuteButtonForRow.disabled = true;
+                shell_currentGapValueDisplay.textContent = currentGap;
+                if (shell_currentSubgroupInfoDisplay) shell_currentSubgroupInfoDisplay.textContent = `サブグループ 1 / ${currentGap}`;
+
+            }
+
+            const gapFullyProcessedByInnerSort = performNextInnerSortStep();
+
+            if (gapFullyProcessedByInnerSort) {
+                const selectsInCurrentRow = shell_allNumberElementsInRows[uiRowIndex];
+                const finalArrayForGap = shell_state.innerSortState.workingArray;
+                if (selectsInCurrentRow) {
+                    selectsInCurrentRow.forEach((sel, idx) => {
+                        sel.value = String(finalArrayForGap[idx]);
+                    });
+                }
+                if (currentExecuteButtonForRow) {
+                    shell_handleExecute({ currentTarget: currentExecuteButtonForRow }, true);
+                } else {
+                    stopAutoPlay();
+                    return;
+                }
+
+                if (isAutoPlaying && shell_state.currentGapIndex < shell_state.gaps.length) {
+                    autoPlayTimerId = setTimeout(autoStep, actualDelayMs);
+                }
+
+            } else {
+                if (shell_state.innerSortState && shell_currentSubgroupInfoDisplay) {
+                    const gapVal = shell_state.innerSortState.gap;
+                    const offset = shell_state.innerSortState.currentSubgroupOffset;
+                    if (offset < gapVal) { // Ensure offset is valid before displaying
+                        shell_currentSubgroupInfoDisplay.textContent = `サブグループ ${offset + 1} / ${gapVal}`;
+                    }
+                }
+                autoPlayTimerId = setTimeout(autoStep, actualDelayMs);
+            }
+        }
+
+        function performNextInnerSortStep() {
+            const state = shell_state.innerSortState;
+            if (!state) return false;
+
+            const arr = state.workingArray;
+            const n = arr.length;
+            const gap = state.gap;
+            let currentOffset = state.currentSubgroupOffset;
+
+            state.highlights = [];
+
+            function getActualIndex(relativeIndex) { // relativeIndex is 0-based for subgroup
+                return currentOffset + (relativeIndex * gap);
+            }
+            function countElementsInSubgroup(offset) {
+                let count = 0;
+                if (offset >= gap) return 0; // Invalid offset
+                for (let i = offset; i < n; i += gap) {
+                    count++;
+                }
+                return count;
+            }
+
+            let subgroupElementCount = countElementsInSubgroup(currentOffset);
+
+            switch (state.phase) {
+                case 'PRE_SUBGROUP_LOOP':
+                    if (currentOffset >= gap) {
+                        state.phase = 'ALL_SUBGROUPS_DONE';
+                        return performNextInnerSortStep();
+                    }
+                    subgroupElementCount = countElementsInSubgroup(currentOffset);
+                    if (subgroupElementCount <= 1) {
+                        state.phase = 'POST_SUBGROUP_LOOP';
+                        return performNextInnerSortStep();
+                    }
+                    state.i_relative = 1; // Outer loop for subgroup starts from its 2nd element (0-indexed: 1)
+                    // k_relative will be set from i_relative in SET_KEY_SUB
+                    state.phase = 'SET_KEY_SUB';
+                    return performNextInnerSortStep();
+
+
+                case 'SET_KEY_SUB':
+                    // i_relative is the 0-based index of the element *within the current subgroup* to be inserted
+                    if (state.i_relative >= subgroupElementCount) {
+                        state.phase = 'POST_SUBGROUP_LOOP';
+                        return performNextInnerSortStep();
+                    }
+                    const actualIndex_i = getActualIndex(state.i_relative);
+                    //This check should ideally be covered by i_relative < subgroupElementCount
+                    if (actualIndex_i >= n) {
+                        state.phase = 'POST_SUBGROUP_LOOP';
+                        return performNextInnerSortStep();
+                    }
+
+                    state.tempKey = arr[actualIndex_i];
+                    state.k_relative = state.i_relative; // k_relative also tracks position within subgroup
+                    state.highlights.push({ index: actualIndex_i, type: 'state-key-active' });
+                    state.phase = 'COMPARING_SUB';
+                    break;
+
+                case 'COMPARING_SUB':
+                    const actualIndex_k = getActualIndex(state.k_relative);
+                    const actualIndex_k_minus_1_sub = getActualIndex(state.k_relative - 1);
+
+                    state.highlights.push({ index: actualIndex_k, type: 'state-key-active' });
+
+                    if (state.k_relative >= 1) {
+                        if (actualIndex_k_minus_1_sub < n && actualIndex_k_minus_1_sub >= 0) {
+                            state.highlights.push({ index: actualIndex_k_minus_1_sub, type: 'state-compare-active' });
+                            if (arr[actualIndex_k_minus_1_sub] > state.tempKey) {
+                                state.phase = 'SHIFTING_SUB';
+                            } else {
+                                state.phase = 'INSERTING_SUB';
+                            }
+                        } else {
+                            state.phase = 'INSERTING_SUB';
+                        }
+                    } else {
+                        state.phase = 'INSERTING_SUB';
+                    }
+                    break;
+
+                case 'SHIFTING_SUB':
+                    const targetShiftIndex = getActualIndex(state.k_relative);
+                    const sourceShiftIndex = getActualIndex(state.k_relative - 1);
+
+                    arr[targetShiftIndex] = arr[sourceShiftIndex];
+                    state.highlights.push({ index: targetShiftIndex, type: 'state-shifting' });
+                    if (sourceShiftIndex >= 0) state.highlights.push({ index: sourceShiftIndex, type: 'state-compare-active' });
+
+                    state.k_relative--;
+                    state.phase = 'COMPARING_SUB';
+                    break;
+
+                case 'INSERTING_SUB':
+                    const insertActualIndex = getActualIndex(state.k_relative);
+                    arr[insertActualIndex] = state.tempKey;
+                    state.highlights.push({ index: insertActualIndex, type: 'state-key-active' });
+
+                    state.i_relative++;
+                    if (state.i_relative >= subgroupElementCount) {
+                        state.phase = 'POST_SUBGROUP_LOOP';
+                    } else {
+                        state.phase = 'SET_KEY_SUB';
+                    }
+                    if (state.phase === 'POST_SUBGROUP_LOOP') return performNextInnerSortStep();
+                    break;
+
+                case 'POST_SUBGROUP_LOOP':
+                    state.currentSubgroupOffset++;
+                    state.i_relative = 1;
+                    state.k_relative = 1;
+                    state.tempKey = null;
+
+                    if (state.currentSubgroupOffset >= gap) {
+                        state.phase = 'ALL_SUBGROUPS_DONE';
+                    } else {
+                        state.phase = 'PRE_SUBGROUP_LOOP'; // Let PRE_SUBGROUP_LOOP check the new subgroup
+                    }
+                    return performNextInnerSortStep();
+
+                case 'ALL_SUBGROUPS_DONE':
+                    shell_currentArray = [...state.workingArray];
+                    updateUIAfterInnerSortStep(true);
+                    return true;
+            }
+
+            updateUIAfterInnerSortStep(false);
+            return false;
+        }
+
+
+        function updateUIAfterInnerSortStep(isGapComplete = false) {
+            const state = shell_state.innerSortState;
+            if (!state) return;
+
+            const arrToDisplay = state.workingArray;
+            const currentSelectsInRow = shell_allNumberElementsInRows[shell_state.currentRowIndexInUI];
+            const barElementStates = [];
+
+            const currentGap = state.gap;
+
+            if (currentSelectsInRow) {
+                currentSelectsInRow.forEach((selectEl, colIndex) => {
+                    selectEl.value = String(arrToDisplay[colIndex]);
+
+                    let sublistIdForBaseColor = colIndex % currentGap;
+                    let cellStateClassesForSelect = [SHELL_SUBGROUP_COLORS[sublistIdForBaseColor % SHELL_SUBGROUP_COLORS.length]];
+                    let cellStateClassesForBar = [SHELL_SUBGROUP_COLORS[sublistIdForBaseColor % SHELL_SUBGROUP_COLORS.length]];
+
+                    if (!isGapComplete) {
+                        const highlightInfo = state.highlights.find(h => h.index === colIndex);
+                        if (highlightInfo) {
+                            cellStateClassesForSelect.push(highlightInfo.type);
+                            cellStateClassesForBar.push(highlightInfo.type);
+                        }
+                    }
+
+                    const specialClasses = ['state-key-active', 'state-compare-active', 'state-shifting'];
+                    selectEl.classList.remove(...specialClasses);
+                    cellStateClassesForSelect.forEach(cls => {
+                        if (cls) selectEl.classList.add(cls);
+                    });
+
+                    barElementStates[colIndex] = cellStateClassesForBar.filter(Boolean);
+                });
+            }
+            renderBarGraph(arrToDisplay, barElementStates);
+        }
+
+
+        function handleReset() {
+            shell_initializeSortProcess();
+        }
+
+        function handleSpeedChange() {
+            const sliderValue = parseInt(speedRange.value, 10);
+            const multiplier = sliderValue / 10.0;
+
+            actualDelayMs = BASE_SPEED_MS / multiplier;
+
+            if (speedValueDisplay) {
+                speedValueDisplay.textContent = `x${multiplier.toFixed(1)} `;
+            }
+
+            if (isAutoPlaying) {
+                clearTimeout(autoPlayTimerId);
+                autoPlayTimerId = setTimeout(autoStep, actualDelayMs);
+            }
+        }
+
+        function initializeAll() {
+            shell_initializeSortProcess();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            playPauseButton = document.getElementById('playPauseButton');
+            resetButton = document.getElementById('resetButton');
+            speedRange = document.getElementById('speedRange');
+            speedValueDisplay = document.getElementById('speedValue');
+
+            const initialSliderValue = parseInt(speedRange.value, 10);
+            const initialMultiplier = initialSliderValue / 10.0;
+            actualDelayMs = BASE_SPEED_MS / initialMultiplier;
+            if (speedValueDisplay) {
+                speedValueDisplay.textContent = `x${initialMultiplier.toFixed(1)} `;
+            }
+
+            if (playPauseButton) playPauseButton.addEventListener('click', toggleAutoPlay);
+            if (resetButton) resetButton.addEventListener('click', handleReset);
+            if (speedRange) speedRange.addEventListener('input', handleSpeedChange);
+
+            initializeAll();
+        });
+    </script>
+
+</body>
+
+</html>

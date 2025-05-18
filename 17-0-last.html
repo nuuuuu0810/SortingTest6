@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ソートアルゴリズム目次</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: #fff; /* Or a light gray if the footer is the only content */
+            color: #1d1d1f;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .a-footer {
+            /*background-color: #f5f5f7;*/
+            padding: 40px 0;
+            font-size: 12px;
+            line-height: 1.33337;
+            font-weight: 400;
+            letter-spacing: -.01em;
+            height: 100vh;
+        }
+
+        .footer-content {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 0 22px;
+        }
+
+        .footer-columns {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens if needed */
+            justify-content: space-between;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #d2d2d7;
+        }
+
+        .column {
+            flex: 1;
+            min-width: 160px; /* Minimum width before wrapping or shrinking */
+            padding-right: 20px; /* Space between columns */
+            margin-bottom: 20px; /* Space if columns wrap */
+            margin-top: 8%;
+        }
+
+        .column:last-child {
+            padding-right: 0;
+        }
+
+        .column h4 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 2em;
+            margin-bottom: 0.8em;
+            color: #515154;
+        }
+
+        .column ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .column ul li {
+            margin-bottom: 0.8em;
+        }
+
+        .column ul li a,
+        .footer-notes a,
+        .legal-links a {
+            color: #515154;
+            text-decoration: none;
+        }
+
+        .column ul li a:hover,
+        .footer-notes a:hover,
+        .legal-links a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-notes {
+            padding-top: 20px;
+            padding-bottom: 20px;
+            margin-bottom: 15px; 
+            color: #515154;
+            border-bottom: 1px solid #d2d2d7;
+        }
+
+        .footer-notes h5 {
+            font-size: 14px;
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+        
+        
+        .footer-notes p {
+            margin: 6px;
+        }
+
+        .footer-legal {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping for copyright and links */
+            justify-content: space-between;
+            align-items: center;
+            color: #515154;
+            padding-top: 10px; /* Reduced top padding for this section */
+        }
+
+        .copyright p {
+            margin: 0 0 10px 0; /* Margin for spacing if nav wraps below */
+        }
+        
+        .legal-links a {
+            margin-left: 10px;
+            padding: 0 5px; /* Slight padding for easier clicking */
+            white-space: nowrap; /* Keep links on one line if possible */
+        }
+
+        .legal-links a:not(:last-child) {
+            border-right: 1px solid #d2d2d7;
+        }
+
+        .legal-links a:first-child {
+            margin-left: 0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .footer-columns {
+                flex-direction: column; /* Stack columns */
+            }
+            .column {
+                min-width: 100%; /* Full width for stacked columns */
+                padding-right: 0; /* No right padding when stacked */
+                margin-bottom: 20px;
+            }
+            .footer-legal {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .copyright {
+                margin-bottom: 10px;
+            }
+            .legal-links {
+                display: flex;
+                flex-wrap: wrap; /* Allow links to wrap */
+            }
+            .legal-links a {
+                margin-left: 0;
+                margin-right: 10px; /* Spacing for wrapped links */
+                margin-bottom: 5px; /* Spacing for wrapped links */
+                padding: 0;
+            }
+             .legal-links a:not(:last-child) {
+                border-right: none; /* Remove vertical bars when stacked or wrapped freely */
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="a-footer">
+        <div class="footer-content">
+            <div class="footer-columns">
+                <div class="column">
+                    <h4>ソートとは</h4>
+                    <ul>
+                        <li><a href="#">人間のソート（トランプ）</a></li>
+                        <li><a href="#">パソコンのソート</a></li>
+                        <li><a href="#">人間とパソコンの比較</a></li>
+                    </ul>
+                    <h4>選択ソートとは</h4>
+                    <ul>
+                        <li><a href="#">選択ソートとは</a></li>
+                        <li><a href="#">選択ソートの仕組み</a></li>
+                    </ul>
+                    <h4>選択ソートの演習</h4>
+                    <ul>
+                        <li><a href="#">課題１－数字５個</a></li>
+                        <li><a href="#">課題２－数字７個</a></li>
+                        <li><a href="#">課題３－数字10個</a></li>
+                        <li><a href="#">課題４－ABC10個</a></li>
+                        <li><a href="#">課題５－ひらがな10個</a></li>
+                        <li><a href="#">発展－ランダム生成</a></li>
+                    </ul>
+                </div>
+
+                <div class="column">
+                    <h4>実社会への応用</h4>
+                    <ul>
+                        <li><a href="#">検索システムへの応用</a></li>
+                        <li><a href="#">演習</a></li>
+                        <li><a href="#">電話帳システムへの応用</a></li>
+                        <li><a href="#">演習</a></li>
+                    </ul>
+                    <h4>挿入ソート</h4>
+                    <ul>
+                        <li><a href="#">挿入ソート　ステップ</a></li>
+                        <li><a href="#">メリット</a></li>
+                        <li><a href="#">挿入ソートの仕組み（５個）</a></li>
+                    </ul>
+                     <h4>挿入ソートの演習</h4>
+                    <ul>
+                        <li><a href="#">５個</a></li>
+                        <li><a href="#">７個</a></li>
+                    </ul>
+                </div>
+
+                <div class="column">
+                    <h4>挿入ソートの演習 (続き)</h4>
+                     <ul>
+                        <li><a href="#">10個（数字）</a></li>
+                        <li><a href="#">10個（ABC）</a></li>
+                        <li><a href="#">10個（日本語）</a></li>
+                    </ul>
+                    <h4>クイックソート</h4>
+                    <ul>
+                        <li><a href="#">クイックソート　ステップ</a></li>
+                        <li><a href="#">メリット</a></li>
+                        <li><a href="#">クイックソートの仕組み（５個）</a></li>
+                    </ul>
+                    <h4>クイックソートの演習</h4>
+                     <ul>
+                        <li><a href="#">５個</a></li>
+                        <li><a href="#">７個</a></li>
+                    </ul>
+                </div>
+
+                <div class="column">
+                    <h4>クイックソートの演習 (続き)</h4>
+                    <ul>
+                        <li><a href="#">10個（数字）</a></li>
+                        <li><a href="#">10個（ABC）</a></li>
+                        <li><a href="#">10個（日本語）</a></li>
+                    </ul>
+                    <h4>シェルソートの仕組み</h4>
+                    <ul>
+                        <li><a href="#">シェルソート　ステップ</a></li>
+                        <li><a href="#">メリット</a></li>
+                        <li><a href="#">シェルソートの仕組み（５個）</a></li>
+                    </ul>
+                    <h4>シェルソートの演習</h4>
+                    <ul>
+                        <li><a href="#">５個</a></li>
+                        <li><a href="#">７個</a></li>
+                    </ul>
+                </div>
+                
+                <div class="column">
+                    <h4>シェルソートの演習 (続き)</h4>
+                    <ul>
+                        <li><a href="#">10個（数字）</a></li>
+                        <li><a href="#">10個（ABC）</a></li>
+                        <li><a href="#">10個（日本語）</a></li>
+                    </ul>
+                    <h4>まとめ</h4>
+                    <ul>
+                        <li><a href="#">まとめ</a></li>
+                    </ul>
+                    <h4>最後に</h4>
+                    <ul>
+                        <li><a href="#">最後に</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-notes">
+                <h5>情報科教育法Ⅱ 模擬授業 ”ソート”</h5>
+                <p>・HTMLのコードを作成する際に、Google AI Studioを使用しています。</p>
+                <p>・OSやブラウザの互換性の影響で、うまく表示されない場合があります。</p>
+            </div>
+
+            <div class="footer-legal">
+                <div class="copyright">
+                    <p>Copyright © 2025 A. All rights reserved.</p>
+                </div>
+                <!-- <div class="country">
+                    <a href="#">日本</a>
+                </div> -->
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
