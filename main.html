@@ -757,13 +757,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             // ▼▼▼ ここから追加 ▼▼▼
             const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-            // スマートフォン/タブレットの判定 (一般的なキーワード)
-            if (/android/i.test(userAgent) || /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-                // mobile.html が同じディレクトリにあると仮定
-                window.location.href = "mobile.html";
-                return; // リダイレクトするので以降の処理は不要
-            }
-            // ▲▲▲ ここまで追加 ▲▲▲
+
 
             const tocLinks = document.querySelectorAll('.table-of-contents a');
             const contentPages = document.querySelectorAll('.content-page');
